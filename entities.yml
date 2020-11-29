@@ -1,0 +1,122 @@
+entity Pos:
+    values:
+        Noun:
+            %lemma
+            (имя)? существительное
+        Verb:
+            %lemma
+            глагол
+        Adjective:
+            %lemma
+            (имя)? прилагательное
+        Adverb:
+            %lemma
+            наречие
+        Participle:
+            %lemma
+            причастие
+        Transgressive:
+            %lemma
+            деепричастие
+        Pronoun:
+            %lemma
+            местоимение
+        Preposition:
+            %lemma
+            предлог
+        Conjunction:
+            %lemma
+            союз
+        Particle:
+            %lemma
+            частица
+        Interjection:
+            %lemma
+            междометие
+        Predicative:
+            %lemma
+            предикатив
+            предикат
+
+entity Number:
+    values:
+        Singular:
+            %lemma
+            (в|к|во|ко)? единственное (число)?
+        Plural:
+            %lemma
+            (в|к|во|ко)? множественное (число)?
+
+entity Gender:
+    values:
+        Masculine:
+            %lemma
+            (в|во)? мужской (род)?
+        Feminine:
+            %lemma
+            (в|во)? женский (род)?
+        Neuter:
+            %lemma
+            (в|во)? средний (род)?
+        Common:
+            %lemma
+            (в|во)? общий (род)?
+
+entity Case:
+    values:
+        Nominative:
+            %lemma
+            (в|во)? именительный (падеж)?
+        Genitive:
+            %lemma
+            (в|во)? родительный (падеж)?
+        Dative:
+            %lemma
+            (в|во)? дательный (падеж)?
+        Accusative:
+            %lemma
+            (в|во)? винительный (падеж)?
+        Instrumental:
+            %lemma
+            (в|во)? творительный (падеж)?
+        Prepositional:
+            %lemma
+            (в|во)? предложный (падеж)?
+        Locative:
+            %lemma
+            (в|во)? местный (падеж)?
+        Partitive:
+            %lemma
+            (в|во)? частичный (падеж)?
+            (в|во)? партитив
+        Vocative:
+            %lemma
+            (в|во)? звательный (падеж)?
+
+entity Tense:
+    values:
+        Past:
+            %lemma
+            (в|во)? (прошлое|прошедшее) (время)?
+        Present:
+            %lemma
+            (в|во)? настоящее (время)?
+        Future:
+            %lemma
+            (в|во)? будущее (время)?
+        Infinitive:
+            %lemma
+            (в|во)? инфинитив
+            (в|во)? неопределённая форма
+
+entity Person:
+    values:
+        First:
+            %lemma
+            (от|в|во)? первое (лицо)?
+        Second:
+            %lemma
+            (от|в|во)? второе (лицо)?
+        Third:
+            %lemma
+            (от|в|во)? третье (лицо)?

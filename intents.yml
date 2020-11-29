@@ -1,0 +1,55 @@
+root:
+    %lemma
+    [($Word|$ExactWord)? $xPos? $xNumber? $xGender? $xTense? $xCase? $xPerson?]
+$xPos:
+    $Pos
+$xNumber:
+    $Number
+$xGender:
+    $Gender
+$xCase:
+    $Case
+$xTense:
+    $Tense
+$xPerson:
+    $Person
+$Word:
+    .
+$Action:
+    %lemma
+    склонять
+    просклонять
+    разбирать
+    разобрать
+    разбор
+    форма
+    ставить
+    поставить
+$ExactWord:
+    %lemma
+    (слово|$Pos) $Word
+    $Action (слово|$Pos)? $Word
+
+slots:
+    pos:
+        type: Pos
+        source: $xPos
+    number:
+        type: Number
+        source: $xNumber
+    gender:
+        type: Gender
+        source: $xGender
+    case:
+        type: Case
+        source: $xCase
+    tense:
+        type: Tense
+        source: $xTense
+    person:
+        type: Person
+        source: $xPerson
+    word:
+        source: $Word
+    exactword:
+        source: $ExactWord
