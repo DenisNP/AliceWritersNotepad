@@ -12,6 +12,9 @@ entity Pos:
         Adverb:
             %lemma
             наречие
+        Numeral:
+            %lemma
+            (имя)? числительное
         Participle:
             %lemma
             причастие

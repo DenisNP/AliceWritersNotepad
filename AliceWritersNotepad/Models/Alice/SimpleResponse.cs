@@ -106,5 +106,20 @@ namespace AliceWritersNotepad.Models.Alice
 
             return (text, tts);
         }
+
+        public static SimpleResponse operator +(SimpleResponse a, SimpleResponse b)
+        {
+            var sumText = a._text + b._text;
+            
+            string[] buttons = null;
+            if (a._buttons != null && b._buttons != null)
+                buttons = a._buttons.Concat(b._buttons).ToArray();
+            else if (a._buttons != null)
+                buttons = a._buttons.ToArray();
+            else if (b._buttons != null) 
+                buttons = b._buttons.ToArray();
+            
+            return new SimpleResponse(sumText, buttons);
+        }
     }
 }
