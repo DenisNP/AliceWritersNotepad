@@ -118,7 +118,93 @@ namespace AliceWritersNotepad.Services
 
         private SimpleResponse ReadSingleForm(Word w, WordForm f, bool isLast)
         {
-            throw new NotImplementedException();
+            var wordForm = f.Word;
+            var accent = f.GetAccentIndex();
+            if (accent != -1) wordForm = wordForm.Insert(accent, "[+]");
+
+            var grammemes = new List<string>();
+            
+            // pos
+            grammemes.Add(f.Tag.Pos switch
+            {
+                Pos.None => "",
+                Pos.Noun => "существительное",
+                Pos.Verb => "глагол",
+                Pos.Adjective => "прилагательное",
+                Pos.Adverb => "наречие",
+                Pos.Numeral => "числительное",
+                Pos.Participle => "частица",
+                Pos.Transgressive => "причастие",
+                Pos.Pronoun => "местоимение",
+                Pos.Preposition => "предлог",
+                Pos.Conjunction => "союз",
+                Pos.Particle => "частица",
+                Pos.Interjection => "деепричастие",
+                Pos.Predicative => "предикатив",
+                _ => ""
+            });
+            
+            // others
+            grammemes.Add(f.Tag.Case switch
+            {
+                Case.None => "",
+                Case.Nominative => "именительного падежа",
+                Case.Genitive => "родительного падежа",
+                Case.Dative => "дательного падежа",
+                Case.Accusative => "винительного падежа",
+                Case.Instrumental => "творительного падежа",
+                Case.Prepositional => "предложного падежа",
+                Case.Locative => "местного падежа",
+                Case.Partitive => "частичного падежа",
+                Case.Vocative => "звательного падежа",
+                _ => ""
+            });
+            
+            grammemes.Add(f.Tag.Gender switch
+            {
+                Gender.None => "",
+                Gender.Masculine => "мужского рода",
+                Gender.Feminine => "женского рода",
+                Gender.Neuter => "среднего рода",
+                Gender.Common => "общего рода",
+                _ => ""
+            });
+            
+            grammemes.Add(f.Tag.Number switch
+            {
+                Number.None => "",
+                Number.Singular => "единственного числа",
+                Number.Plural => "множественного числа",
+                _ => ""
+            });
+            
+            grammemes.Add(f.Tag.Person switch
+            {
+                Person.None => "",
+                Person.First => "первого лица",
+                Person.Second => "второго лица",
+                Person.Third => "третьего лица",
+                _ => ""
+            });
+            
+            grammemes.Add(f.Tag.Tense switch
+            {
+                Tense.None => "",
+                Tense.Past => "прошедшего времени",
+                Tense.Present => "настоящего времени",
+                Tense.Future => "будущего времени",
+                Tense.Infinitive => "инфинитив",
+                _ => ""
+            });
+            
+            // combine
+            grammemes.RemoveAll(g => g.IsNullOrEmpty());
+            if (grammemes.Count == 0) grammemes.Add("данных о форме слова нет");
+
+            var text = $"{wordForm}: {grammemes.Join(", ")}";
+            if (!isLast) text += "\n\n";
+            
+            return new SimpleResponse(text);
         }
 
         private T ParseEnum<T>(AliceRequest request, string slot) where T : struct
