@@ -65,3 +65,13 @@ exit:
         закрыть
         закрывать
         закрой
+
+byletters:
+    root:
+        %lemma
+        (прочитать|прочесть|сказать)? (это)? (слово)? $Word? по буквам
+    $Word:
+        .
+    slots:
+        word:
+            source: $Word

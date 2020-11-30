@@ -56,6 +56,14 @@ namespace AliceWritersNotepad.Models.Alice
             var tts = "";
             
             var match = Pattern.Match(t);
+            
+            // check if no found
+            if (!match.Success)
+            {
+                return (_text, _text);
+            }
+            
+            // if found
             while (match.Success)
             {
                 // remove beginning of string
@@ -103,6 +111,9 @@ namespace AliceWritersNotepad.Models.Alice
                 // find pattern again
                 match = Pattern.Match(t);
             }
+
+            text += t;
+            tts += t;
 
             return (text, tts);
         }

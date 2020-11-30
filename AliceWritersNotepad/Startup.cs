@@ -16,8 +16,10 @@ namespace AliceWritersNotepad
             services.AddSingleton<AliceService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AliceService aliceService)
         {
+            aliceService.Load();
+            
             app.UseRouting();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }

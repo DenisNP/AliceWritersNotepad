@@ -6,5 +6,6 @@
         public const string YandexHelp2 = "YANDEX.HELP";
         public const string Main = "main";
         public const string Exit = "exit";
+        public const string ByLetters = "byletters";
     }
 }

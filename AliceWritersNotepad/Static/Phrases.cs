@@ -4,6 +4,11 @@ namespace AliceWritersNotepad.Static
 {
     public static class Phrases
     {
+        public static readonly SimpleResponse Hi = new SimpleResponse(
+            @"Привет",
+            new[] { "Слово стали", "Помощь", "Выход" }
+        );
+        
         public static readonly SimpleResponse Help = new SimpleResponse(
             @"""Блокнот писателя""",
             new[] {"Навык в предложном падеже", "Выход"}
