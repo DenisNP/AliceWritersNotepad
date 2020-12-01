@@ -22,7 +22,13 @@ namespace AliceWritersNotepad.Services
             // start
             if (request.IsEnter())
             {
-                return Phrases.Hi.Generate(request);
+                var currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                var resp = request.State.User.LastEnter < currentTime - 30 * 24 * 3600000L
+                    ? Phrases.FirstRun.Generate(request)
+                    : Phrases.Hi.Generate(request);
+
+                resp.UserStateUpdate.LastEnter = currentTime;
+                return resp;
             }
             
             // help command
@@ -58,17 +64,19 @@ namespace AliceWritersNotepad.Services
                 
                 return ReadByLetters(w, accent).Generate(request);
             }
+            
+            // has word
+            var hasWord = request.HasSlot(Intents.Main, Slots.Word) 
+                          || request.Request.Nlu.Tokens.Count == 1;
+
+            var changeForm = Slots.GrammemeSlots.Any(s => request.HasSlot(Intents.Main, s));
 
             // no word / unknown command
             if (
-                !request.HasSlot(Intents.Main, Slots.Word)
+                !hasWord
                 && (
                     request.State.Session.LastWord.IsNullOrEmpty()
-                    ||
-                    (
-                        Slots.GrammemeSlots.All(s => !request.HasSlot(Intents.Main, s))
-                        && !request.HasIntent(Intents.ByLetters)
-                    )
+                    || (!changeForm && !request.HasIntent(Intents.ByLetters))
                 )
             )
             {
@@ -76,16 +84,19 @@ namespace AliceWritersNotepad.Services
             }
             
             // word command
-            if (request.HasSlot(Intents.Main, Slots.Word))
+            if (hasWord)
             {
-                request.State.Session.LastWord = request.GetSlot(Intents.Main, Slots.Word);
+                request.State.Session.LastWord = request.HasSlot(Intents.Main, Slots.Word)
+                    ? request.GetSlot(Intents.Main, Slots.Word)
+                    : request.Request.Nlu.Tokens.First();
             }
 
             // word not exists
             if (!_nMorph.WordExists(request.State.Session.LastWord))
             {
+                var resp = Phrases.UnknownWord(request.State.Session.LastWord).Generate(request);
                 request.State.Session.Clear();
-                return Phrases.UnknownWord(request.State.Session.LastWord).Generate(request);
+                return resp;
             }
 
             // word exists, find it
@@ -106,19 +117,30 @@ namespace AliceWritersNotepad.Services
             }
 
             // find forms
-            var exactForms = new List<WordForm>();
-            var nonExactForms = new List<WordForm>();
+            var exactForms = new List<(Word, WordForm)>();
+            var nonExactForms = new List<(Word, WordForm)>();
             foreach (var w in words)
             {
-                var form = w.ClosestForm(gender, @case, number, tense, person, true);
-                if (form != null)
+                
+                if (!changeForm)
                 {
-                    exactForms.Add(form);
+                    // get form from input word
+                    var formsFound = w.ExactForms(request.State.Session.LastWord);
+                    exactForms.AddRange(formsFound.Select(f => (w, f)));
                 }
                 else
                 {
-                    form = w.ClosestForm(gender, @case, number, tense, person, false);
-                    nonExactForms.Add(form);
+                    // get form from input data
+                    var form = w.ClosestForm(gender, @case, number, tense, person, true);
+                    if (form != null)
+                    {
+                        exactForms.Add((w, form));
+                    }
+                    else
+                    {
+                        form = w.ClosestForm(gender, @case, number, tense, person, false);
+                        nonExactForms.Add((w, form));
+                    }
                 }
             }
 
@@ -137,13 +159,13 @@ namespace AliceWritersNotepad.Services
                 response += Phrases.NonExactForms;
             }
 
-            request.State.Session.LastForm = formsToRead.First().Word;
-            request.State.Session.LastFormAccent = formsToRead.First().GetAccentIndex();
+            request.State.Session.LastForm = formsToRead.First().Item2.Word;
+            request.State.Session.LastFormAccent = formsToRead.First().Item2.GetAccentIndex();
             
             for (var i = 0; i < formsToRead.Count; i++)
             {
-                var f = formsToRead[i];
-                response += ReadSingleForm(f, i == formsToRead.Count - 1);
+                var (w, f) = formsToRead[i];
+                response += ReadSingleForm(w, f, i == formsToRead.Count - 1);
             }
 
             return response.Generate(request);
@@ -151,7 +173,9 @@ namespace AliceWritersNotepad.Services
 
         private SimpleResponse ReadByLetters(string w, int accent)
         {
-            var response = $@"Читаю слово [screen|{w.ToUpper()}][voice|{(accent == -1 ? w : w.Insert(accent, "+"))}] по буквам:\n\n";
+            var response = $@"Читаю слово [screen|{(accent == -1 ? w.ToUpper() : w.ToUpper().Insert(accent + 1, " ́"))}]" +
+                           "[voice|{(accent == -1 ? w : w.Insert(accent, "+"))}] по буквам:\n\n";
+            
             var letters = w.Select(l => $"[screen|{l.ToString().ToUpper()}][voice|{TtsOfLetter(l.ToString())}]");
 
             return new SimpleResponse(
@@ -160,7 +184,7 @@ namespace AliceWritersNotepad.Services
             );
         }
 
-        private SimpleResponse ReadSingleForm(WordForm f, bool isLast)
+        private SimpleResponse ReadSingleForm(Word w, WordForm f, bool isLast)
         {
             var wordForm = f.Word;
             var accent = f.GetAccentIndex();
@@ -176,8 +200,8 @@ namespace AliceWritersNotepad.Services
                 Pos.Adjective => "прилагательное",
                 Pos.Adverb => "наречие",
                 Pos.Numeral => "числительное",
-                Pos.Participle => "частица",
-                Pos.Transgressive => "причастие",
+                Pos.Participle => "причастие",
+                Pos.Transgressive => "междометие",
                 Pos.Pronoun => "местоимение",
                 Pos.Preposition => "предлог",
                 Pos.Conjunction => "союз",
@@ -190,16 +214,16 @@ namespace AliceWritersNotepad.Services
             // others
             grammemes.Add(f.Tag.Case switch
             {
-                Case.None => "",
-                Case.Nominative => "именительного падежа",
-                Case.Genitive => "родительного падежа",
-                Case.Dative => "дательного падежа",
-                Case.Accusative => "винительного падежа",
-                Case.Instrumental => "творительного падежа",
-                Case.Prepositional => "предложного падежа",
-                Case.Locative => "местного падежа",
-                Case.Partitive => "частичного падежа",
-                Case.Vocative => "звательного падежа",
+                Case.None => f.Tag.Pos == Pos.Noun ? "несклоняемое" : "",
+                Case.Nominative => "в именительном падеже",
+                Case.Genitive => "в родительном падеже",
+                Case.Dative => "в дательном падеже",
+                Case.Accusative => "в винительном падеже",
+                Case.Instrumental => "в творительном падеже",
+                Case.Prepositional => "в предложном падеже",
+                Case.Locative => "в местном падеже",
+                Case.Partitive => "в частичном падеже",
+                Case.Vocative => "в звательном падеже",
                 _ => ""
             });
             
@@ -244,12 +268,21 @@ namespace AliceWritersNotepad.Services
             grammemes.RemoveAll(g => g.IsNullOrEmpty());
             if (grammemes.Count == 0) grammemes.Add("данных о форме слова нет");
 
-            var text = $"[screen|{wordForm.ToUpper()}]" +
-                       $"[voice|{(accent == -1 ? wordForm : wordForm.Insert(accent, "+"))}]: " +
-                       $"{grammemes.Join(", ")}.";
+            var text = $"[screen|{(accent == -1 ? wordForm.ToUpper() : wordForm.ToUpper().Insert(accent + 1, " ́"))}]" +
+                              $"[voice|{(accent == -1 ? wordForm : wordForm.Insert(accent, "+"))}]";
+            
+            // add lemma if current form is not
+            if (w.Lemma.Word != f.Word)
+            {
+                accent = w.Lemma.GetAccentIndex();
+                text += $"[screen| ({(accent == -1 ? w.Lemma.Word.ToUpper() : w.Lemma.Word.ToUpper().Insert(accent + 1, " ́"))})]" +
+                        $"[p|150][voice| {(accent == -1 ? w.Lemma.Word : w.Lemma.Word.Insert(accent, "+"))}]";
+            }
+            
+            // add grammemes
+            text += $": {grammemes.Join(", ")}.";
             
             if (!isLast) text += "\n\n";
-            
             return new SimpleResponse(text);
         }
 
