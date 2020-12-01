@@ -66,8 +66,14 @@ namespace AliceWritersNotepad.Services
             }
             
             // has word
+            var filler = new []{"слово", "слова", "слов", "словом"};
+            // workaround
+            var startsFromFiller = request.Request.Nlu.Tokens.Count == 2 
+                                   && filler.Contains(request.Request.Nlu.Tokens[0]);
+            
             var hasWord = request.HasSlot(Intents.Main, Slots.Word) 
-                          || request.Request.Nlu.Tokens.Count == 1;
+                            || request.Request.Nlu.Tokens.Count == 1
+                            || startsFromFiller;
 
             var changeForm = Slots.GrammemeSlots.Any(s => request.HasSlot(Intents.Main, s));
 
@@ -88,7 +94,9 @@ namespace AliceWritersNotepad.Services
             {
                 request.State.Session.LastWord = request.HasSlot(Intents.Main, Slots.Word)
                     ? request.GetSlot(Intents.Main, Slots.Word)
-                    : request.Request.Nlu.Tokens.First();
+                    : startsFromFiller 
+                        ? request.Request.Nlu.Tokens[1] 
+                        : request.Request.Nlu.Tokens.First();
             }
 
             // word not exists
