@@ -312,6 +312,8 @@ namespace AliceWritersNotepad.Services
                     return "э" + letter.ToLower();
                 case "И":
                     return "ии";
+                case "О":
+                    return "оо";
                 case "Й":
                     return "и краткое";
                 case "Ь":
