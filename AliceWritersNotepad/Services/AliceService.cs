@@ -182,7 +182,7 @@ namespace AliceWritersNotepad.Services
         private SimpleResponse ReadByLetters(string w, int accent)
         {
             var response = $@"Читаю слово [screen|{(accent == -1 ? w.ToUpper() : w.ToUpper().Insert(accent + 1, " ́"))}]" +
-                           "[voice|{(accent == -1 ? w : w.Insert(accent, "+"))}] по буквам:\n\n";
+                           $"[voice|{(accent == -1 ? w : w.Insert(accent, "+"))}] по буквам:\n\n";
             
             var letters = w.Select(l => $"[screen|{l.ToString().ToUpper()}][voice|{TtsOfLetter(l.ToString())}]");
 
