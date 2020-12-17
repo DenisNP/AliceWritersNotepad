@@ -216,6 +216,7 @@ namespace AliceWritersNotepad.Services
                 Pos.Particle => "частица",
                 Pos.Interjection => "деепричастие",
                 Pos.Predicative => "предикатив",
+                Pos.Parenthesis => "вводное слово",
                 _ => ""
             });
             
